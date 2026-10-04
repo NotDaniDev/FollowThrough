@@ -11,22 +11,22 @@
 
 ---
 
-## 💡 The Problem
+## The Problem
 In modern enterprise teams, critical business context doesn't live in clean JIRA tickets—it lives in **scattered conversations**:
 1. **Broken 1-on-1 Promises**: A quick text or call promise (*"I'll get back to you with the revised pricing by 3 PM"*) gets buried in chat threads and forgotten.
 2. **The "Orphan Task" Dilemma**: In team meetings, someone says *"Someone really needs to audit our backup replication before Friday"*—everyone nods in agreement, but **nobody is assigned ownership**. The task slips through the cracks, resulting in outages or blown client deals.
 
-## 🚀 The Solution: Follow Through
+## The Solution: Follow Through
 Follow Through turns messy enterprise conversations into automated accountability:
-- 📱 **Photon iMessage Agent**: Lives directly inside native iMessage/SMS. Text commitments naturally, and receive proactive conversational nudges before deadlines expire.
-- 🎙️ **Gemini Transcript Parsing**: Upload raw Zoom/Teams transcripts. Gemini extracts explicit commitments with exact timeframes and flags **high-risk orphan tasks**.
-- ⚠️ **Instant Orphan Task Claiming**: Allows any team member to claim ownership of unassigned meeting tasks with one click.
-- 📊 **Tiger Data Time-Series Engine**: Tracks commitments over time with live countdown clocks and SLA breach warnings.
-- 🔊 **ElevenLabs Morning Voice Standup**: Generates an expressive 60-second audio debrief of your commitments due today.
+- **Photon iMessage Agent**: Lives directly inside native iMessage/SMS. Text commitments naturally, and receive proactive conversational nudges before deadlines expire.
+- **Gemini Transcript Parsing**: Upload raw Zoom/Teams transcripts. Gemini extracts explicit commitments with exact timeframes and flags **high-risk orphan tasks**.
+- **Instant Orphan Task Claiming**: Allows any team member to claim ownership of unassigned meeting tasks with one click.
+- **Tiger Data Time-Series Engine**: Tracks commitments over time with live countdown clocks and SLA breach warnings.
+- **ElevenLabs Morning Voice Standup**: Generates an expressive 60-second audio debrief of your commitments due today.
 
 ---
 
-## 🏆 Hackathon Sponsor Prize Alignment
+## Hackathon Sponsor Prize Alignment
 
 | Challenge / Sponsor | Implementation in Follow Through
 | :--- | :--- | :--- |
@@ -38,7 +38,7 @@ Follow Through turns messy enterprise conversations into automated accountabilit
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 ```bash
