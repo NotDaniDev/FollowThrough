@@ -52,3 +52,12 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Modal backdrop & popover transitions */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.78) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  transition: opacity 0.2s ease-in-out;
+}
+

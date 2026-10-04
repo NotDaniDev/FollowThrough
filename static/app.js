@@ -1,4 +1,4 @@
-// Follow Through AI — Frontend Application Logic
+// Follow Through AI — Frontend Application Logic (Lovable Design System)
 
 let allCommitments = [];
 
@@ -6,38 +6,66 @@ let allCommitments = [];
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   setupEventListeners();
+  updateLiveDate();
   loadData();
+  loadPhoneSetting();
   // Live countdown update every second
   setInterval(updateCountdowns, 1000);
 });
 
-// Setup Tab Switching
-function setupTabs() {
-  const tabs = [
-    { btn: "tab-btn-commitments", view: "tab-view-commitments" },
-    { btn: "tab-btn-orphans", view: "tab-view-orphans" },
-    { btn: "tab-btn-upload", view: "tab-view-upload" }
-  ];
+// Update live date in header
+function updateLiveDate() {
+  const el = document.getElementById("header-live-date");
+  if (!el) return;
+  const now = new Date();
+  const options = { weekday: 'long', month: 'long', day: 'numeric' };
+  el.textContent = `${now.toLocaleDateString('en-US', options)} · Live workspace`;
+}
 
-  tabs.forEach(t => {
-    const el = document.getElementById(t.btn);
-    if (!el) return;
-    el.addEventListener("click", () => {
-      tabs.forEach(other => {
-        document.getElementById(other.btn).classList.remove("active");
-        document.getElementById(other.btn).classList.add("text-slate-400");
-        document.getElementById(other.view).classList.add("hidden");
-      });
-      el.classList.add("active");
-      el.classList.remove("text-slate-400");
-      document.getElementById(t.view).classList.remove("hidden");
+// Setup Tab Switching (Main Tabs + Left Sidebar Views)
+function setupTabs() {
+  const tabKeys = ["commitments", "orphans", "upload"];
+
+  function selectTab(key) {
+    tabKeys.forEach(t => {
+      const topBtn = document.getElementById(`tab-btn-${t}`);
+      const sideBtn = document.getElementById(`sidebar-btn-${t}`);
+      const view = document.getElementById(`tab-view-${t}`);
+
+      if (t === key) {
+        if (topBtn) {
+          topBtn.className = "tab-active inline-flex items-center justify-center whitespace-nowrap py-1 text-sm font-medium cursor-pointer transition-all border-b-2 px-0 pb-3 text-foreground shadow-none";
+        }
+        if (sideBtn) {
+          sideBtn.className = "inline-flex items-center gap-2.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors h-9 py-2 w-full justify-start px-3 bg-secondary text-foreground";
+        }
+        if (view) view.classList.remove("hidden");
+      } else {
+        if (topBtn) {
+          topBtn.className = "inline-flex items-center justify-center whitespace-nowrap py-1 text-sm font-medium cursor-pointer transition-all border-b-2 border-transparent px-0 pb-3 text-muted-foreground hover:text-foreground shadow-none";
+        }
+        if (sideBtn) {
+          sideBtn.className = "inline-flex items-center gap-2.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors h-9 py-2 w-full justify-start px-3 text-muted-foreground hover:bg-accent hover:text-foreground";
+        }
+        if (view) view.classList.add("hidden");
+      }
     });
+  }
+
+  tabKeys.forEach(key => {
+    const topBtn = document.getElementById(`tab-btn-${key}`);
+    const sideBtn = document.getElementById(`sidebar-btn-${key}`);
+    if (topBtn) topBtn.addEventListener("click", () => selectTab(key));
+    if (sideBtn) sideBtn.addEventListener("click", () => selectTab(key));
   });
+
+  window.activateTab = selectTab;
 }
 
 function activateTab(tabKey) {
-  const btn = document.getElementById(`tab-btn-${tabKey}`);
-  if (btn) btn.click();
+  if (typeof window.activateTab === "function") {
+    window.activateTab(tabKey);
+  }
 }
 
 // Load Data from Backend API
@@ -61,165 +89,213 @@ async function loadData() {
 
 // Render Top KPI Metrics
 function renderAnalytics(data) {
-  document.getElementById("stat-pending").textContent = data.pending ?? 0;
-  document.getElementById("stat-orphans").textContent = data.active_orphans ?? 0;
-  document.getElementById("stat-overdue").textContent = data.overdue ?? 0;
-  document.getElementById("stat-reliability").textContent = `${data.reliability_rate_percent ?? 100}%`;
+  const pendingEl = document.getElementById("stat-pending");
+  const orphansEl = document.getElementById("stat-orphans");
+  const overdueEl = document.getElementById("stat-overdue");
+  const relEl = document.getElementById("stat-reliability");
+  const sideOrphans = document.getElementById("sidebar-orphans-badge");
+  const tabOrphans = document.getElementById("tab-orphans-badge");
 
-  document.getElementById("count-all").textContent = data.total_commitments ?? 0;
-  document.getElementById("count-orphans").textContent = data.active_orphans ?? 0;
+  if (pendingEl) pendingEl.textContent = data.pending ?? 0;
+  if (orphansEl) orphansEl.textContent = data.active_orphans ?? 0;
+  if (overdueEl) overdueEl.textContent = data.overdue ?? 0;
+  if (relEl) relEl.textContent = `${data.reliability_rate_percent ?? 100}%`;
+
+  if (sideOrphans) sideOrphans.textContent = data.active_orphans ?? 0;
+  if (tabOrphans) tabOrphans.textContent = data.active_orphans ?? 0;
 }
 
-// Format Remaining Time Countdown
+// Format Remaining Time Countdown (Lovable Design System)
 function getCountdownData(deadlineIso) {
-  if (!deadlineIso) return { text: "No deadline", badgeClass: "countdown-normal" };
-  const target = new Date(deadlineIso).getTime();
-  const now = new Date().getTime();
-  const diff = target - now;
+  if (!deadlineIso) {
+    return { text: "No deadline", cssClass: "text-muted-foreground", isOverdue: false, dateLabel: "Soon" };
+  }
+  const target = new Date(deadlineIso);
+  const now = new Date();
+  const diff = target.getTime() - now.getTime();
+
+  // Date label formatted e.g. "Oct 4"
+  const dateLabel = target.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   if (diff <= 0) {
-    const overdueMin = Math.abs(Math.floor(diff / (1000 * 60)));
-    const overdueHr = Math.floor(overdueMin / 60);
-    const text = overdueHr > 0 ? `⚠️ OVERDUE by ${overdueHr}h ${overdueMin % 60}m` : `⚠️ OVERDUE by ${overdueMin}m`;
-    return { text, badgeClass: "countdown-overdue" };
+    return { 
+      text: "⚠️ OVERDUE", 
+      cssClass: "text-danger font-bold", 
+      isOverdue: true,
+      dateLabel 
+    };
   }
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const days = Math.floor(hours / 24);
 
   if (hours < 2) {
-    return { text: `⏳ ${hours}h ${minutes}m ${seconds}s left`, badgeClass: "countdown-warning" };
+    return { 
+      text: `⏳ ${hours}h ${minutes}m left`, 
+      cssClass: "text-warning font-semibold", 
+      isOverdue: false,
+      dateLabel 
+    };
+  } else if (days >= 1) {
+    return { 
+      text: `⏳ ${days}d ${hours % 24}h left`, 
+      cssClass: "text-foreground", 
+      isOverdue: false,
+      dateLabel 
+    };
   } else {
-    return { text: `🕒 ${hours}h ${minutes}m left`, badgeClass: "countdown-normal" };
+    return { 
+      text: `⏳ ${hours}h ${minutes}m left`, 
+      cssClass: "text-foreground", 
+      isOverdue: false,
+      dateLabel 
+    };
   }
 }
 
-// Update all countdown badges in real time
+// Update countdown badges every second without full re-render
 function updateCountdowns() {
-  document.querySelectorAll("[data-deadline]").forEach(el => {
-    const iso = el.getAttribute("data-deadline");
-    const { text, badgeClass } = getCountdownData(iso);
+  const elements = document.querySelectorAll("[data-deadline-iso]");
+  elements.forEach(el => {
+    const iso = el.getAttribute("data-deadline-iso");
+    if (!iso) return;
+    const { text, cssClass } = getCountdownData(iso);
     el.textContent = text;
-    el.className = `text-[11px] font-mono px-2.5 py-1 rounded-full font-semibold ${badgeClass}`;
+    el.className = `font-mono text-xs font-medium ${cssClass}`;
   });
 }
 
-// Render All Commitments Cards
+// Render All Commitments Table (Matching Lovable format)
 function renderCommitments(items) {
   const container = document.getElementById("commitments-list");
+  if (!container) return;
+
   if (!items.length) {
-    container.innerHTML = `<div class="col-span-3 text-center py-12 text-slate-500 text-sm">No commitments found. Text a promise or upload a meeting!</div>`;
+    container.innerHTML = `<div class="p-12 text-center text-sm text-muted-foreground">No commitments found. Text a promise or upload a meeting!</div>`;
     return;
   }
 
   container.innerHTML = items.map(c => {
-    const { text: countdownText, badgeClass } = getCountdownData(c.deadline_iso);
-    const channelBadge = c.channel === "imessage" 
-      ? `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px] font-semibold">💬 iMessage</span>`
-      : `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded text-[10px] font-semibold">🎙️ Meeting</span>`;
+    const { text: countdownText, cssClass: countdownClass, isOverdue, dateLabel } = getCountdownData(c.deadline_iso);
 
-    const statusBadge = c.status === "completed"
-      ? `<span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded font-semibold">Completed ✅</span>`
-      : `<span data-deadline="${c.deadline_iso || ''}" class="text-[11px] font-mono px-2.5 py-1 rounded-full font-semibold ${badgeClass}">${countdownText}</span>`;
+    // Status dot color
+    let dotClass = "bg-primary";
+    if (c.status === "completed") {
+      dotClass = "bg-muted-foreground/50";
+    } else if (isOverdue || c.status === "overdue") {
+      dotClass = "bg-danger";
+    }
 
-    const orphanNotice = c.is_orphan 
-      ? `<div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-[11px] text-amber-300 flex items-center justify-between">
-           <span>⚠️ Orphan Task (Unassigned)</span>
-           <button onclick="claimOrphanTask('${c.id}')" class="bg-amber-600 hover:bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-semibold transition">Claim 🙋</button>
-         </div>`
-      : (c.claimed_by ? `<div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-1.5 text-[11px] text-emerald-300 flex items-center gap-1.5 font-medium">
-           <span>🙋 Claimed & Owned by <strong>${c.claimed_by}</strong></span>
-         </div>` : "");
+    const channelLabel = c.channel === "imessage" ? "iMessage" : (c.meeting_title || "Meeting");
+
+    const claimedBadge = c.claimed_by ? `
+      <div class="mt-1.5 pl-4 flex items-center gap-1.5 text-[11px] text-primary font-medium">
+        <span>🙋 Claimed & Owned by <strong>${c.claimed_by}</strong></span>
+      </div>
+    ` : (c.is_orphan ? `
+      <div class="mt-1.5 pl-4 flex items-center gap-2 text-[11px] text-warning font-medium">
+        <span class="rounded bg-warning/10 border border-warning/20 px-1.5 py-0.5 text-[10px] font-mono">⚠️ Unassigned Risk</span>
+        <button onclick="claimOrphanTask('${c.id}')" class="underline hover:text-foreground font-semibold cursor-pointer text-warning">Click to Claim 🙋</button>
+      </div>
+    ` : "");
 
     return `
-      <div class="bg-slate-900/60 border ${c.status === 'completed' ? 'border-slate-800 opacity-60' : (c.is_orphan ? 'border-amber-500/40' : 'border-slate-800')} rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:border-slate-700 transition">
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            ${channelBadge}
-            ${statusBadge}
+      <article class="group grid gap-4 border-b border-border p-5 last:border-b-0 md:grid-cols-[1fr_160px_130px] md:items-center hover:bg-secondary/15 transition-colors">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full shrink-0 ${dotClass}"></span>
+            <h3 class="truncate font-display text-sm font-semibold ${c.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}">
+              ${c.title}
+            </h3>
           </div>
 
-          <div>
-            <h4 class="text-sm font-bold text-white leading-snug">${c.title}</h4>
-            <p class="text-xs text-slate-400 mt-1 italic line-clamp-2">"${c.raw_statement}"</p>
-          </div>
+          <p class="mt-1.5 line-clamp-1 pl-4 text-xs text-muted-foreground">
+            ${c.committer || 'Unassigned'} → ${c.recipient || 'Team'} · ${channelLabel}
+          </p>
 
-          <div class="text-xs text-slate-300 space-y-1 border-t border-slate-800/80 pt-2 font-mono">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">Committer:</span>
-              <span class="font-medium ${c.committer ? 'text-slate-200' : 'text-amber-400'}">${c.committer || 'Unassigned (Orphan)'}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">Recipient:</span>
-              <span class="text-slate-200">${c.recipient || 'Team / Client'}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">Agreed Timeframe:</span>
-              <span class="text-emerald-400 font-semibold">${c.deadline_text || 'Pending'}</span>
-            </div>
-          </div>
+          <p class="mt-1.5 line-clamp-1 pl-4 text-xs italic text-muted-foreground/80">
+            “${c.raw_statement || c.title}”
+          </p>
 
-          ${orphanNotice}
+          ${claimedBadge}
         </div>
 
-        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 gap-2">
-          ${c.status !== 'completed' ? `
-            <button onclick="nudgeCommitment('${c.id}')" class="flex-1 py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center justify-center gap-1 border border-slate-700">
-              <span>📱 Send Nudge</span>
-              ${c.nudge_count > 0 ? `<span class="bg-blue-600 text-white rounded-full px-1.5 py-0.2 text-[9px]">${c.nudge_count}</span>` : ''}
+        <div>
+          <p data-deadline-iso="${c.deadline_iso || ''}" class="font-mono text-xs font-medium ${c.status === 'completed' ? 'text-muted-foreground' : countdownClass}">
+            ${c.status === 'completed' ? 'Completed ✅' : countdownText}
+          </p>
+          <p class="mt-1 text-[11px] text-muted-foreground">
+            ${c.deadline_text || dateLabel}
+          </p>
+        </div>
+
+        <div class="flex justify-end items-center gap-1.5">
+          ${c.is_orphan && !c.claimed_by ? `
+            <button onclick="claimOrphanTask('${c.id}')" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer transition-all bg-warning text-black hover:bg-warning/90 h-8 rounded-md px-3.5 text-xs shadow-sm hover:scale-105 active:scale-95" title="Take ownership of this orphan task">
+              <span>Claim 🙋</span>
             </button>
-            <button onclick="markCompleted('${c.id}')" class="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition flex items-center gap-1">
-              <span>Done ✅</span>
+          ` : (c.status !== 'completed' ? `
+            <button onclick="nudgeCommitment('${c.id}')" class="inline-flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-accent hover:text-foreground h-9 w-9 border border-border/60 text-muted-foreground relative" aria-label="Nudge about ${c.title}" title="Send nudge via Photon iMessage">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell">
+                <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+              </svg>
+              ${c.nudge_count > 0 ? `<span class="absolute -top-1 -right-1 size-3.5 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">${c.nudge_count}</span>` : ''}
+            </button>
+            <button onclick="markCompleted('${c.id}')" class="inline-flex items-center justify-center gap-1 whitespace-nowrap font-medium cursor-pointer transition-colors hover:bg-primary/20 hover:text-primary h-8 rounded-md px-3 text-xs border border-border/60 text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+              <span>Done</span>
             </button>
           ` : `
-            <span class="text-xs text-slate-500 italic">Fulfilled on schedule</span>
-          `}
+            <span class="text-xs text-muted-foreground italic">Fulfilled ✅</span>
+          `)}
         </div>
-      </div>
+      </article>
     `;
   }).join("");
 }
 
-// Render Orphan Tasks Tab
+// Render Needs Owner / Orphan Tasks Table (Lovable format)
 function renderOrphans(orphans) {
   const container = document.getElementById("orphans-list");
+  if (!container) return;
+
   if (!orphans.length) {
-    container.innerHTML = `<div class="col-span-3 text-center py-12 text-slate-500 text-sm">🎉 No unassigned orphan tasks detected! All commitments have owners.</div>`;
+    container.innerHTML = `<div class="p-12 text-center text-sm text-muted-foreground">🎉 No unassigned orphan tasks detected! All commitments have owners.</div>`;
     return;
   }
 
   container.innerHTML = orphans.map(c => `
-    <div class="bg-amber-950/20 border border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm hover:border-amber-400 transition">
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-semibold">⚠️ Unassigned Risk</span>
-          <span class="text-xs text-slate-400 font-mono">${c.deadline_text || 'ASAP'}</span>
+    <article class="group grid gap-4 border-b border-border p-5 last:border-b-0 md:grid-cols-[1fr_160px_130px] md:items-center hover:bg-secondary/15 transition-colors">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="size-2 rounded-full shrink-0 bg-warning"></span>
+          <h3 class="truncate font-display text-sm font-semibold text-warning">${c.title}</h3>
         </div>
 
-        <div>
-          <h4 class="text-sm font-bold text-amber-200">${c.title}</h4>
-          <p class="text-xs text-slate-400 mt-1 italic">"${c.raw_statement}"</p>
-        </div>
+        <p class="mt-1.5 line-clamp-1 pl-4 text-xs text-muted-foreground">
+          Meeting: <span class="text-foreground">${c.meeting_title || 'Sprint Sync'}</span> · Risk: <strong class="text-danger">High / Rollout Blocker</strong>
+        </p>
 
-        <div class="text-xs text-slate-400 space-y-1 border-t border-slate-800/80 pt-2 font-mono">
-          <div class="flex items-center justify-between">
-            <span>Meeting Source:</span>
-            <span class="text-slate-200">${c.meeting_title || 'Sprint Review'}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span>Enterprise Impact:</span>
-            <span class="text-rose-400 font-semibold">High / Rollout Blocker</span>
-          </div>
-        </div>
+        <p class="mt-1.5 line-clamp-1 pl-4 text-xs italic text-muted-foreground/80">
+          “${c.raw_statement || c.title}”
+        </p>
       </div>
 
-      <div class="pt-2 border-t border-slate-800/80">
-        <button onclick="claimOrphanTask('${c.id}')" class="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white transition flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20">
-          <span>🙋 Claim Responsibility (Assign to Me)</span>
+      <div>
+        <p class="font-mono text-xs font-medium text-warning">⚠️ Unassigned</p>
+        <p class="mt-1 text-[11px] text-muted-foreground">${c.deadline_text || 'ASAP'}</p>
+      </div>
+
+      <div class="flex justify-end items-center">
+        <button onclick="claimOrphanTask('${c.id}')" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer transition-colors bg-warning text-black hover:bg-warning/90 h-8 rounded-md px-3 text-xs shadow-sm">
+          <span>Claim 🙋</span>
         </button>
       </div>
-    </div>
+    </article>
   `).join("");
 }
 
@@ -239,14 +315,14 @@ async function nudgeCommitment(id) {
     const res = await fetch(`/api/commitments/${id}/nudge`, { method: "POST" });
     const data = await res.json();
     const rpc = data.rpc_result || {};
-    
+    const recipient = data.recipient || "team member";
+    const phone = data.recipient_phone || "your phone";
+
     if (rpc.status === "delivered_to_phone") {
-      alert(`📱 Nudge dispatched via Photon iMessage to ${data.recipient_phone}!\n\n"${data.nudge_body}"`);
-    } else if (rpc.status === "authorization_required") {
-      const assigned = rpc.assigned_phone || "+1 (628) 289-4567";
-      alert(`⚠️ Photon Security Policy:\n\nTo protect against unsolicited spam, Photon Spectrum's shared line requires your phone (${data.recipient_phone}) to send an initial text first.\n\n👉 Fix in 5 seconds:\n1. Open Messages on your phone\n2. Text 'START' to ${assigned} (or click 'Open iMessage' in the top bar)\n\nOnce sent, live nudges and automated reminders will land directly on your phone!`);
+      alert(`📱 Live iMessage Dispatched!\n\nDelivered directly to ${phone}:\n"${data.nudge_body}"`);
     } else {
-      alert(`📱 Nudge triggered for ${data.recipient}!\n\n"${data.nudge_body}"`);
+      // Dispatched and logged cleanly without repetitive nagging
+      alert(`📱 Nudge Dispatched & Logged!\n\n"${data.nudge_body}"\n\nRecipient: ${recipient} (${phone})\nProactive reminder counter incremented.`);
     }
     loadData();
   } catch (err) {
@@ -259,11 +335,10 @@ function claimOrphanTask(id) {
   const task = allCommitments.find(c => c.id === id);
   const modal = document.getElementById("claim-modal");
   if (!modal) {
-    console.error("claim-modal element not found");
+    console.error("claim-modal not found");
     return;
   }
 
-  // Populate Task Details
   const taskIdEl = document.getElementById("claim-task-id");
   const taskTitleEl = document.getElementById("claim-task-title");
   const taskDeadlineEl = document.getElementById("claim-task-deadline");
@@ -276,69 +351,17 @@ function claimOrphanTask(id) {
   if (taskDeadlineEl) taskDeadlineEl.textContent = `Due: ${task?.deadline_text || 'Pending'}`;
   if (taskMeetingEl) taskMeetingEl.textContent = task?.meeting_title || 'Sprint / Meeting Item';
 
-  // Restore saved committer name
   const savedName = localStorage.getItem("followthrough_user_name") || "Alex";
   if (userNameEl) userNameEl.value = savedName;
 
-  // Show linked phone in checkbox label
   const phoneInput = document.getElementById("input-user-phone");
   const currentPhone = phoneInput?.value || localStorage.getItem("pledgeflow_user_phone") || "";
   if (userPhoneDisplay) {
     userPhoneDisplay.textContent = currentPhone || "Linked Phone";
   }
 
-  // Show modal
   modal.classList.remove("hidden");
-  if (userNameEl) {
-    setTimeout(() => userNameEl.focus(), 50);
-  }
-}
-
-// Update Phone UI state in the top bar
-function updatePhoneUI(data) {
-  const phone = data.phone;
-  const assigned = data.assigned_phone || "+16282894567";
-  const imessageUrl = data.imessage_url || `sms:${assigned}&body=START`;
-
-  const input = document.getElementById("input-user-phone");
-  const pill = document.getElementById("phone-status-pill");
-  const actions = document.getElementById("phone-active-actions");
-  const guideCard = document.getElementById("phone-guidance-card");
-  const openLink = document.getElementById("btn-open-imessage-link");
-  const inlineOpen = document.getElementById("link-inline-open");
-
-  if (input && phone) input.value = phone;
-
-  if (phone) {
-    if (pill) {
-      pill.textContent = `🟢 Linked: ${phone}`;
-      pill.className = "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-mono font-medium";
-    }
-    if (actions) actions.classList.remove("hidden");
-    if (guideCard) guideCard.classList.remove("hidden");
-
-    const lblLinked = document.getElementById("lbl-linked-phone");
-    if (lblLinked) lblLinked.textContent = phone;
-
-    const lblAssigned = document.getElementById("lbl-assigned-phone");
-    if (lblAssigned) lblAssigned.textContent = assigned;
-
-    const lblAssignedInline = document.getElementById("lbl-assigned-phone-inline");
-    if (lblAssignedInline) lblAssignedInline.textContent = assigned;
-
-    const lblGuideAssigned = document.getElementById("guide-assigned-phone");
-    if (lblGuideAssigned) lblGuideAssigned.textContent = assigned;
-
-    if (openLink) openLink.href = imessageUrl;
-    if (inlineOpen) inlineOpen.href = imessageUrl;
-  } else {
-    if (pill) {
-      pill.textContent = "Not Linked";
-      pill.className = "text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono font-medium";
-    }
-    if (actions) actions.classList.add("hidden");
-    if (guideCard) guideCard.classList.add("hidden");
-  }
+  if (userNameEl) setTimeout(() => userNameEl.focus(), 50);
 }
 
 // Load and display user phone setting
@@ -346,9 +369,28 @@ async function loadPhoneSetting() {
   try {
     const res = await fetch("/api/settings/phone");
     const data = await res.json();
-    if (data.phone) {
-      localStorage.setItem("pledgeflow_user_phone", data.phone);
-      updatePhoneUI(data);
+    const phone = data.phone || localStorage.getItem("pledgeflow_user_phone") || "";
+    const assigned = data.assigned_phone || "+14152179994";
+    const imessageUrl = data.imessage_url || `sms:${assigned}&body=START`;
+
+    if (phone) {
+      localStorage.setItem("pledgeflow_user_phone", phone);
+      const input = document.getElementById("input-user-phone");
+      if (input) input.value = phone;
+      const bannerPhone = document.getElementById("banner-linked-phone");
+      if (bannerPhone) bannerPhone.textContent = phone;
+    }
+    if (assigned) {
+      const bannerAssigned = document.getElementById("banner-assigned-phone");
+      if (bannerAssigned) bannerAssigned.textContent = assigned;
+      const bannerLink = document.getElementById("banner-messages-link");
+      if (bannerLink) bannerLink.href = imessageUrl;
+      const heroLink = document.getElementById("btn-hero-open-messages");
+      if (heroLink) heroLink.href = imessageUrl;
+      const guidePhone = document.getElementById("guide-assigned-phone");
+      if (guidePhone) guidePhone.textContent = assigned;
+      const guideLink = document.getElementById("btn-guide-open-imessage");
+      if (guideLink) guideLink.href = imessageUrl;
     }
   } catch (err) {
     console.error("Failed to load phone setting:", err);
@@ -357,8 +399,6 @@ async function loadPhoneSetting() {
 
 // Setup Event Listeners
 function setupEventListeners() {
-  loadPhoneSetting();
-
   // Reset / Reload Demo Commitments
   const btnResetDemo = document.getElementById("btn-reset-demo");
   if (btnResetDemo) {
@@ -368,13 +408,19 @@ function setupEventListeners() {
       try {
         const res = await fetch("/api/demo/reset", { method: "POST" });
         const data = await res.json();
-        alert(`⚡ Demo data reloaded! Restored ${data.count} active commitments and orphan tasks with fresh live countdowns.`);
+        alert(`⚡ Demo data reloaded! Restored ${data.count} active commitments and orphan tasks.`);
         loadData();
       } catch (err) {
         alert("Failed to reload demo data");
       } finally {
         btnResetDemo.disabled = false;
-        btnResetDemo.textContent = "⚡ Reload Demo Commitments";
+        btnResetDemo.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reload demo</span>
+        `;
       }
     });
   }
@@ -384,12 +430,12 @@ function setupEventListeners() {
   const inputPhone = document.getElementById("input-user-phone");
   if (btnSavePhone) {
     btnSavePhone.addEventListener("click", async () => {
-      const phone = inputPhone.value.trim();
+      const phone = inputPhone?.value.trim();
       if (!phone || phone.length < 7) {
-        alert("Please enter a valid phone number (e.g. +17320000000)");
+        alert("Please enter a valid phone number (e.g. +18622370408)");
         return;
       }
-      
+
       btnSavePhone.disabled = true;
       btnSavePhone.textContent = "Linking...";
       try {
@@ -400,51 +446,20 @@ function setupEventListeners() {
         });
         const data = await res.json();
         localStorage.setItem("pledgeflow_user_phone", data.phone);
-        updatePhoneUI(data);
-
-        const rpc = data.welcome_dispatched || {};
-        const assigned = data.assigned_phone || "+1 (628) 289-4567";
-
-        if (rpc.status === "delivered_to_phone") {
-          alert(`📱 Phone Linked: ${data.phone}\n\n✅ Welcome iMessage successfully dispatched directly to your device via Photon Spectrum!`);
-        } else if (rpc.status === "authorization_required" || (rpc.details && rpc.details.includes("Target not allowed"))) {
-          alert(`📱 Phone Registered: ${data.phone}!\n\nBot Line Assigned: ${assigned}\n\n👉 Final Step to Receive Texts:\nTap the green "Open iMessage" button in the top bar to text 'START' to the bot, or add your number to the Outbound Allowlist at app.photon.codes.\n\nOnce opened, all deadline nudges will reach your phone!`);
-        } else {
-          alert(`📱 Phone Linked: ${data.phone}!\nFollow Through will send all proactive nudges and reminders here.`);
-        }
+        alert(`✅ Phone Linked Successfully!\n\nYour number: ${data.phone}\nAssigned Photon line: ${data.assigned_phone}\n\nSend 'START' to ${data.assigned_phone} on iMessage to complete authorization!`);
+        loadPhoneSetting();
       } catch (err) {
-        alert(`Failed to register phone with Spectrum: ${err}`);
+        alert("Failed to link phone");
       } finally {
         btnSavePhone.disabled = false;
-        btnSavePhone.textContent = "Link Phone";
-      }
-    });
-  }
-
-  // Test Phone Nudge Button
-  const btnTestNudge = document.getElementById("btn-test-phone-nudge");
-  if (btnTestNudge) {
-    btnTestNudge.addEventListener("click", async () => {
-      btnTestNudge.disabled = true;
-      btnTestNudge.textContent = "Testing...";
-      try {
-        const res = await fetch("/api/settings/test-nudge", { method: "POST" });
-        const data = await res.json();
-        const rpc = data.rpc_result || {};
-
-        if (rpc.status === "delivered_to_phone") {
-          alert(`✅ Test Nudge Delivered!\n\nCheck your iPhone Messages app for the notification.`);
-        } else if (rpc.status === "authorization_required") {
-          const assigned = rpc.assigned_phone || "+1 (628) 289-4567";
-          alert(`⚠️ Authorization Step Needed:\n\nPhoton's shared line requires your phone to send 'START' to ${assigned} first, or add your number to the Outbound Allowlist on app.photon.codes.\n\nTap "Open iMessage" in the top bar to send 'START' right now!`);
-        } else {
-          alert(`Test nudge dispatched. Status: ${rpc.status || 'Complete'}`);
-        }
-      } catch (err) {
-        alert("Failed to send test nudge");
-      } finally {
-        btnTestNudge.disabled = false;
-        btnTestNudge.textContent = "⚡ Test Nudge";
+        btnSavePhone.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-2">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2"></path>
+            <path d="M15 7h2a5 5 0 1 1 0 10h-2"></path>
+            <line x1="8" x2="16" y1="12" y2="12"></line>
+          </svg>
+          <span>Link</span>
+        `;
       }
     });
   }
@@ -461,23 +476,31 @@ function setupEventListeners() {
     if (btnGuideOk) btnGuideOk.addEventListener("click", () => modalGuide.classList.add("hidden"));
   }
 
-  // Custom Reminder Modal
+  // Custom Reminder / New Commitment Modal
   const btnOpenReminder = document.getElementById("btn-open-custom-reminder");
+  const btnHeroSetReminder = document.getElementById("btn-hero-set-reminder");
   const btnCloseReminder = document.getElementById("btn-close-reminder-modal");
   const btnCancelReminder = document.getElementById("btn-cancel-reminder");
   const reminderModal = document.getElementById("reminder-modal");
   const reminderForm = document.getElementById("custom-reminder-form");
 
-  if (btnOpenReminder && reminderModal) {
-    btnOpenReminder.addEventListener("click", () => reminderModal.classList.remove("hidden"));
+  if (reminderModal) {
+    if (btnOpenReminder) {
+      btnOpenReminder.addEventListener("click", () => reminderModal.classList.remove("hidden"));
+    }
+    if (btnHeroSetReminder) {
+      btnHeroSetReminder.addEventListener("click", () => reminderModal.classList.remove("hidden"));
+    }
     if (btnCloseReminder) btnCloseReminder.addEventListener("click", () => reminderModal.classList.add("hidden"));
     if (btnCancelReminder) btnCancelReminder.addEventListener("click", () => reminderModal.classList.add("hidden"));
+  }
 
+  if (reminderForm && reminderModal) {
     reminderForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const title = document.getElementById("reminder-title").value.trim();
       const timeframe = document.getElementById("reminder-timeframe").value.trim();
-      const recipient = document.getElementById("reminder-recipient").value.trim() || "Self / Client";
+      const recipient = document.getElementById("reminder-recipient").value.trim() || "Self / Team";
       const notifyPhone = document.getElementById("reminder-notify-phone").checked;
 
       const submitBtn = document.getElementById("btn-save-reminder");
@@ -492,7 +515,7 @@ function setupEventListeners() {
             title,
             timeframe,
             recipient,
-            committer: "Me",
+            committer: "You",
             notify_phone: notifyPhone
           })
         });
@@ -505,7 +528,7 @@ function setupEventListeners() {
         alert("Failed to save reminder");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Set Reminder & Alert Phone 🚀";
+        submitBtn.textContent = "Create commitment";
       }
     });
   }
@@ -550,9 +573,7 @@ function setupEventListeners() {
           })
         });
 
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         const data = await res.json();
         claimModal.classList.add("hidden");
@@ -560,13 +581,8 @@ function setupEventListeners() {
         const im = data.imessage_dispatched;
         if (im && im.status === "delivered_to_phone") {
           alert(`✅ Task Claimed Successfully!\n\nOwnership assigned to ${userName}.\n📱 Photon iMessage confirmation & proactive nudge dispatched to your phone!`);
-        } else if (im && im.status === "authorization_required") {
-          const assigned = im.assigned_phone || "+1 (628) 289-4567";
-          alert(`✅ Task Claimed by ${userName}!\n\n⚠️ Photon Security Notice:\nTo receive live iMessage nudges on your phone, remember to text 'START' to ${assigned} (or click 'Open iMessage' in the top bar) to authorize Photon Spectrum.`);
-        } else if (notifyPhone && im) {
-          alert(`✅ Task Claimed!\n\nAssigned to ${userName}.\n📱 Confirmation dispatched via Photon Spectrum.`);
         } else {
-          alert(`✅ Task Claimed!\n\nAssigned to ${userName}. It has been added to your active commitments.`);
+          alert(`✅ Task Claimed Successfully!\n\nOwnership assigned to ${userName}.\nAdded to your active commitments with automated deadline tracking.`);
         }
 
         await loadData();
@@ -576,147 +592,349 @@ function setupEventListeners() {
         alert("Failed to claim task. Please check server connection.");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = "<span>Claim & Take Ownership 🙋</span>";
+        submitBtn.textContent = "Claim & Take Ownership 🙋";
       }
     });
   }
 
-  // Voice Briefing Button
-  const btnVoice = document.getElementById("btn-voice-briefing");
-  btnVoice.addEventListener("click", async () => {
-    const label = document.getElementById("voice-briefing-label");
-    const originalText = label.textContent;
-    label.textContent = "Synthesizing...";
-    btnVoice.disabled = true;
+  // Morning Standup Voice Briefing Controller (Action Deck & Header)
+  const btnVoiceHeader = document.getElementById("btn-voice-briefing");
+  const btnPlayStandup = document.getElementById("btn-play-standup");
+  const labelPlayStandup = document.getElementById("label-play-standup");
+  const iconPlayStandup = document.getElementById("icon-play-standup");
+  const btnToggleScript = document.getElementById("btn-toggle-script");
+  const labelToggleScript = document.getElementById("label-toggle-script");
+  const scriptContainer = document.getElementById("audio-script-container");
+  const scriptPreview = document.getElementById("audio-script-preview");
+  const audioElement = document.getElementById("audio-element");
 
-    try {
-      const res = await fetch("/api/voice/briefing", { method: "POST" });
-      const data = await res.json();
-      
-      const banner = document.getElementById("audio-banner");
-      banner.classList.remove("hidden");
-      document.getElementById("audio-script-preview").textContent = data.script;
+  let isPlayingBriefing = false;
+  let cachedAudioUrl = null;
+  let cachedScript = null;
 
-      if (data.audio_url) {
-        const audio = document.getElementById("audio-element");
-        audio.src = data.audio_url;
-        audio.play();
+  function updateAudioStateUI(isPlaying) {
+    isPlayingBriefing = isPlaying;
+    if (labelPlayStandup) {
+      labelPlayStandup.textContent = isPlaying ? "Stop Briefing" : "Play Morning Briefing";
+    }
+    if (btnPlayStandup) {
+      if (isPlaying) {
+        btnPlayStandup.classList.remove("bg-primary", "hover:bg-primary/90", "text-primary-foreground");
+        btnPlayStandup.classList.add("bg-destructive", "hover:bg-destructive/90", "text-destructive-foreground");
       } else {
-        // Fallback to browser SpeechSynthesis
-        const utter = new SpeechSynthesisUtterance(data.script);
-        utter.rate = 1.0;
-        window.speechSynthesis.speak(utter);
+        btnPlayStandup.classList.remove("bg-destructive", "hover:bg-destructive/90", "text-destructive-foreground");
+        btnPlayStandup.classList.add("bg-primary", "hover:bg-primary/90", "text-primary-foreground");
       }
-    } catch (err) {
-      alert("Failed to generate voice briefing");
-    } finally {
-      label.textContent = originalText;
-      btnVoice.disabled = false;
     }
-  });
-
-  // Load Sample Transcript
-  const btnSample = document.getElementById("btn-load-sample");
-  btnSample.addEventListener("click", async () => {
-    try {
-      const res = await fetch("/api/sample-transcript");
-      const data = await res.json();
-      document.getElementById("input-transcript-text").value = data.content;
-    } catch (err) {
-      console.error(err);
+    if (iconPlayStandup) {
+      iconPlayStandup.innerHTML = isPlaying
+        ? `<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>`
+        : `<polygon points="6 3 20 12 6 21 6 3"></polygon>`;
     }
-  });
+    if (btnVoiceHeader) {
+      if (isPlaying) {
+        btnVoiceHeader.classList.add("text-primary", "border-primary");
+      } else {
+        btnVoiceHeader.classList.remove("text-primary", "border-primary");
+      }
+    }
+  }
 
-  // Submit Meeting Transcript
-  const btnSubmit = document.getElementById("btn-submit-transcript");
-  btnSubmit.addEventListener("click", async () => {
-    const text = document.getElementById("input-transcript-text").value.trim();
-    const title = document.getElementById("input-meeting-title").value.trim();
-    if (!text) {
-      alert("Please paste a transcript first!");
+  async function handleToggleBriefing() {
+    if (isPlayingBriefing) {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      updateAudioStateUI(false);
       return;
     }
 
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = "Analyzing with Gemini AI...";
+    if (labelPlayStandup) labelPlayStandup.textContent = "Synthesizing Briefing...";
+    if (btnPlayStandup) btnPlayStandup.disabled = true;
+    if (btnVoiceHeader) btnVoiceHeader.disabled = true;
 
     try {
-      const formData = new FormData();
-      formData.append("raw_text", text);
-      formData.append("title", title);
+      let audioUrl = cachedAudioUrl;
+      let script = cachedScript;
 
-      const res = await fetch("/api/meetings/upload", {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
+      if (!audioUrl && !script) {
+        const res = await fetch("/api/voice/briefing", { method: "POST" });
+        const data = await res.json();
+        audioUrl = data.audio_url;
+        script = data.script;
+        cachedAudioUrl = audioUrl;
+        cachedScript = script;
+      }
 
-      const statusBox = document.getElementById("upload-status");
-      statusBox.classList.remove("hidden");
-      statusBox.innerHTML = `
-        <div class="text-emerald-300 font-semibold mb-1">✅ Gemini Analysis Complete!</div>
-        <div>Extracted <strong>${data.total_extracted}</strong> total items: 
-          <strong>${data.assigned_commitments}</strong> assigned promises and 
-          <strong class="text-amber-400">${data.orphan_tasks} high-risk orphan tasks</strong>!
-        </div>
-      `;
+      if (scriptPreview && script) {
+        scriptPreview.textContent = script;
+      }
 
-      loadData();
+      if (audioUrl && audioElement) {
+        audioElement.src = audioUrl;
+        audioElement.onended = () => {
+          updateAudioStateUI(false);
+        };
+        await audioElement.play();
+        updateAudioStateUI(true);
+      } else if (script) {
+        // Fallback to browser SpeechSynthesis
+        const utter = new SpeechSynthesisUtterance(script);
+        utter.rate = 1.0;
+        utter.onend = () => {
+          updateAudioStateUI(false);
+        };
+        window.speechSynthesis.speak(utter);
+        updateAudioStateUI(true);
+      }
     } catch (err) {
-      alert("Failed to analyze transcript");
+      console.error("Failed to generate voice briefing:", err);
+      alert("Failed to play morning standup briefing.");
+      updateAudioStateUI(false);
     } finally {
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = "✨ Extract Commitments with Gemini";
+      if (btnPlayStandup) btnPlayStandup.disabled = false;
+      if (btnVoiceHeader) btnVoiceHeader.disabled = false;
+      if (!isPlayingBriefing && labelPlayStandup) {
+        labelPlayStandup.textContent = "Play Morning Briefing";
+      }
     }
-  });
+  }
 
-  // iMessage Modal Drawer
+  if (btnPlayStandup) {
+    btnPlayStandup.addEventListener("click", handleToggleBriefing);
+  }
+  if (btnVoiceHeader) {
+    btnVoiceHeader.addEventListener("click", handleToggleBriefing);
+  }
+
+  if (btnToggleScript && scriptContainer) {
+    btnToggleScript.addEventListener("click", () => {
+      const isHidden = scriptContainer.classList.contains("hidden");
+      if (isHidden) {
+        scriptContainer.classList.remove("hidden");
+        if (labelToggleScript) labelToggleScript.textContent = "Hide Script";
+        else btnToggleScript.textContent = "Hide Script";
+      } else {
+        scriptContainer.classList.add("hidden");
+        if (labelToggleScript) labelToggleScript.textContent = "Read Script";
+        else btnToggleScript.textContent = "Read Script";
+      }
+    });
+  }
+
+  // Load Sample Transcript
+  const btnSample = document.getElementById("btn-load-sample");
+  const transcriptInput = document.getElementById("input-transcript-text");
+  const wordCountEl = document.getElementById("transcript-word-count");
+
+  if (transcriptInput && wordCountEl) {
+    transcriptInput.addEventListener("input", () => {
+      const words = transcriptInput.value.trim() ? transcriptInput.value.trim().split(/\s+/).length : 0;
+      wordCountEl.textContent = `${words} words`;
+    });
+  }
+
+  // Upload Transcript File (.txt, .vtt)
+  const fileInput = document.getElementById("input-transcript-file");
+  if (fileInput) {
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const content = await file.text();
+      if (transcriptInput) {
+        transcriptInput.value = content;
+        const words = content.trim().split(/\s+/).length;
+        if (wordCountEl) wordCountEl.textContent = `${words} words`;
+      }
+      const titleInput = document.getElementById("input-meeting-title");
+      if (titleInput) {
+        titleInput.value = file.name.replace(/\.(txt|vtt)$/i, "");
+      }
+    });
+  }
+
+  if (btnSample) {
+    btnSample.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/sample-transcript");
+        const data = await res.json();
+        if (transcriptInput) {
+          transcriptInput.value = data.content;
+          const words = data.content.trim().split(/\s+/).length;
+          if (wordCountEl) wordCountEl.textContent = `${words} words`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
+
+  // Submit Meeting Transcript for Gemini Extraction
+  const btnSubmit = document.getElementById("btn-submit-transcript");
+  if (btnSubmit) {
+    btnSubmit.addEventListener("click", async () => {
+      const text = transcriptInput?.value.trim();
+      const title = document.getElementById("input-meeting-title")?.value.trim() || "Meeting Transcript";
+      if (!text) {
+        alert("Please paste a transcript first!");
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Analyzing with Gemini AI...";
+
+      try {
+        const formData = new FormData();
+        formData.append("raw_text", text);
+        formData.append("title", title);
+
+        const res = await fetch("/api/meetings/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+
+        const resultsCard = document.getElementById("transcript-results-card");
+        if (resultsCard) {
+          resultsCard.classList.remove("hidden");
+          resultsCard.innerHTML = `
+            <div class="text-sm font-semibold text-foreground">Analysis Complete: "${data.meeting_title}"</div>
+            <div class="mt-1 text-xs">Gemini extracted <strong>${data.total_extracted} commitments</strong>: 
+              <span class="text-primary font-medium">${data.assigned_commitments} assigned</span> and 
+              <span class="text-warning font-medium">${data.orphan_tasks} high-risk orphan tasks</span>!
+            </div>
+          `;
+        }
+
+        await loadData();
+        activateTab("commitments");
+      } catch (err) {
+        alert("Failed to analyze transcript");
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles">
+            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+          </svg>
+          <span>Extract commitments</span>
+        `;
+      }
+    });
+  }
+
+  // iMessage Drawer Open/Close
   const btnOpenImessage = document.getElementById("btn-open-imessage");
   const btnCloseImessage = document.getElementById("btn-close-imessage");
   const imessageModal = document.getElementById("imessage-modal");
 
-  btnOpenImessage.addEventListener("click", () => imessageModal.classList.remove("hidden"));
-  btnCloseImessage.addEventListener("click", () => imessageModal.classList.add("hidden"));
+  if (btnOpenImessage && imessageModal) {
+    btnOpenImessage.addEventListener("click", () => imessageModal.classList.remove("hidden"));
+  }
+  if (btnCloseImessage && imessageModal) {
+    btnCloseImessage.addEventListener("click", () => imessageModal.classList.add("hidden"));
+  }
 
   // iMessage Form Send
   const imessageForm = document.getElementById("imessage-form");
   const imessageInput = document.getElementById("imessage-input");
   const imessageMessages = document.getElementById("imessage-messages");
 
-  imessageForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = imessageInput.value.trim();
-    if (!text) return;
+  if (imessageForm) {
+    imessageForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = imessageInput?.value.trim();
+      if (!text) return;
 
-    // Append user bubble
-    const userBubble = document.createElement("div");
-    userBubble.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-sm max-w-[85%] self-end ml-auto text-xs";
-    userBubble.textContent = text;
-    imessageMessages.appendChild(userBubble);
-    imessageInput.value = "";
-    imessageMessages.scrollTop = imessageMessages.scrollHeight;
-
-    try {
-      const formData = new FormData();
-      formData.append("sender", "Alex");
-      formData.append("text", text);
-
-      const res = await fetch("/api/imessage/simulate", {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
-
-      // Append bot bubble
-      const botBubble = document.createElement("div");
-      botBubble.className = "bg-slate-800 text-slate-200 p-3 rounded-2xl rounded-tl-sm max-w-[85%] self-start border border-slate-700/50 whitespace-pre-line text-xs";
-      botBubble.textContent = data.reply;
-      imessageMessages.appendChild(botBubble);
+      // Append user bubble (right)
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex justify-end";
+      userBubble.innerHTML = `
+        <div class="max-w-[82%] whitespace-pre-line rounded-lg px-3.5 py-2.5 text-xs bg-primary text-primary-foreground">
+          ${escapeHtml(text)}
+          <div class="mt-1 font-mono text-[9px] opacity-70 text-right">${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+        </div>
+      `;
+      imessageMessages.appendChild(userBubble);
+      imessageInput.value = "";
       imessageMessages.scrollTop = imessageMessages.scrollHeight;
 
-      loadData();
-    } catch (err) {
-      console.error(err);
+      try {
+        const formData = new FormData();
+        formData.append("sender", localStorage.getItem("followthrough_user_name") || "Alex");
+        formData.append("text", text);
+
+        const res = await fetch("/api/imessage/simulate", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+
+        // Append bot bubble (left)
+        const botBubble = document.createElement("div");
+        botBubble.className = "flex justify-start";
+        botBubble.innerHTML = `
+          <div class="max-w-[82%] whitespace-pre-line rounded-lg px-3.5 py-2.5 text-xs bg-secondary/90 border border-border/50 text-foreground">
+            ${escapeHtml(data.reply)}
+            <div class="mt-1 font-mono text-[9px] opacity-55">${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+          </div>
+        `;
+        imessageMessages.appendChild(botBubble);
+        imessageMessages.scrollTop = imessageMessages.scrollHeight;
+
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
+
+  // Mobile menu button toggles sidebar
+  const btnMobileMenu = document.getElementById("btn-mobile-menu");
+  const sidebar = document.querySelector("aside");
+  if (btnMobileMenu && sidebar) {
+    btnMobileMenu.addEventListener("click", () => {
+      sidebar.classList.toggle("hidden");
+    });
+  }
+
+  // KPI Card "Needs owner" click navigates to orphans tab
+  const kpiOrphans = document.getElementById("kpi-card-orphans");
+  if (kpiOrphans) {
+    kpiOrphans.addEventListener("click", () => activateTab("orphans"));
+  }
+
+  // Dismiss modals when clicking backdrop or pressing Escape
+  const dismissableModals = [
+    document.getElementById("claim-modal"),
+    document.getElementById("reminder-modal"),
+    document.getElementById("photon-guide-modal")
+  ];
+
+  dismissableModals.forEach(modal => {
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.add("hidden");
+      });
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      dismissableModals.forEach(m => m && m.classList.add("hidden"));
+      const imModal = document.getElementById("imessage-modal");
+      if (imModal) imModal.classList.add("hidden");
     }
   });
 }
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Expose global actions for inline onclick handlers
+window.claimOrphanTask = claimOrphanTask;
+window.nudgeCommitment = nudgeCommitment;
+window.markCompleted = markCompleted;
+window.activateTab = activateTab;
