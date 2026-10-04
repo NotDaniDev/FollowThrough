@@ -244,7 +244,10 @@ def simulate_imessage(sender: str = Form("Alex"), text: str = Form(...)):
 
 @app.get("/api/imessage/feed")
 def get_imessage_feed():
-    return get_recent_feed()
+    try:
+        return get_recent_feed()
+    except Exception as e:
+        return []
 
 @app.post("/api/voice/briefing")
 def get_voice_briefing(payload: Optional[VoiceBriefingRequest] = None):

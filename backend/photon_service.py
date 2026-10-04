@@ -102,7 +102,7 @@ def register_or_get_user_in_spectrum(phone: str) -> Dict[str, Any]:
     return {
         "success": False,
         "phone": cleaned,
-        "assigned_phone": db.get_setting("spectrum_assigned_phone") or "+16282894567"
+        "assigned_phone": db.get_setting("spectrum_assigned_phone") or "+14152179994"
     }
 
 def get_user_phone() -> str:
@@ -123,7 +123,7 @@ def get_phone_connection_details() -> Dict[str, Any]:
         uid = reg.get("user_id")
 
     if not assigned:
-        assigned = "+16282894567"  # Default shared Cosmos line for project
+        assigned = "+14152179994"  # Default shared Cosmos line for project
 
     return {
         "phone": phone,
@@ -142,7 +142,7 @@ def set_user_phone(phone: str) -> Dict[str, Any]:
 
     # Register in Photon Spectrum
     reg = register_or_get_user_in_spectrum(cleaned)
-    assigned = reg.get("assigned_phone") or "+16282894567"
+    assigned = reg.get("assigned_phone") or "+14152179994"
     uid = reg.get("user_id")
 
     return {
@@ -154,12 +154,21 @@ def set_user_phone(phone: str) -> Dict[str, Any]:
     }
 
 def log_imessage_event(direction: str, sender: str, text: str, meta: Optional[Dict[str, Any]] = None):
+    def sanitize(val):
+        if isinstance(val, (str, int, float, bool, type(None))):
+            return val
+        if isinstance(val, dict):
+            return {str(k): sanitize(v) for k, v in val.items()}
+        if isinstance(val, (list, tuple)):
+            return [sanitize(v) for v in val]
+        return str(val)
+
     event = {
         "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
-        "direction": direction, # 'inbound' or 'outbound'
-        "sender": sender,
-        "text": text,
-        "meta": meta or {}
+        "direction": str(direction),
+        "sender": str(sender),
+        "text": str(text),
+        "meta": sanitize(meta or {})
     }
     IMESSAGE_FEED_LOG.insert(0, event)
     if len(IMESSAGE_FEED_LOG) > 35:
@@ -181,7 +190,7 @@ def send_live_imessage_rpc(phone_number: str, message_text: str) -> Dict[str, An
         return {"success": False, "error": "Spectrum project credentials not configured."}
 
     # Ensure user is registered in Spectrum
-    assigned_phone = db.get_setting("spectrum_assigned_phone") or "+16282894567"
+    assigned_phone = db.get_setting("spectrum_assigned_phone") or "+14152179994"
     uid = db.get_setting("spectrum_user_id")
 
     # 1. Fetch live iMessage token from Spectrum Cloud
@@ -228,7 +237,7 @@ def send_live_imessage_rpc(phone_number: str, message_text: str) -> Dict[str, An
         details = rpc_err.details() if hasattr(rpc_err, 'details') else str(rpc_err)
         log_imessage_event("outbound", "Follow Through Bot", message_text, {"target": clean_number, "rpc_error": details})
 
-        is_target_not_allowed = "Target not allowed" in details
+        is_target_not_allowed = "Target not allowed" in details or "replies are limited" in details or "respond" in details
         return {
             "success": False,
             "status": "authorization_required" if is_target_not_allowed else "spectrum_error",
