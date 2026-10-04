@@ -30,11 +30,11 @@ Follow Through turns messy enterprise conversations into automated accountabilit
 
 | Challenge / Sponsor | Implementation in Follow Through | Prize Target |
 | :--- | :--- | :--- |
-| **ADP: AI for the Modern Enterprise** | Directly solves context fragmentation by unifying texts, calls, and transcripts into an actionable commitment timeline. | **Amazon Echo Show 5** |
-| **Best Use of Gemini API** | High-context semantic parsing, timeframe normalization, and passive-voice orphan task classification. | **MLH Swag Kits** |
-| **Agents in iMessage using Photon** | Native conversational iMessage companion via Photon / Spectrum framework. | **$700 Cash & Credits** |
-| **Best Use of Tiger Data** | Time-series PostgreSQL storage of chronological promises, countdowns, and completion velocity. | **Stream Deck Mini** |
-| **Best Use of ElevenLabs** | Expressive Morning Voice Debrief & automated voice reminder alerts. | **Wireless Earbuds** |
+| **ADP: AI for the Modern Enterprise** | Directly solves context fragmentation by unifying texts, calls, and transcripts into an actionable commitment timeline. 
+| **Best Use of Gemini API** | High-context semantic parsing, timeframe normalization, and passive-voice orphan task classification.
+| **Agents in iMessage using Photon** | Native conversational iMessage companion via Photon / Spectrum framework. 
+| **Best Use of Tiger Data** | Time-series PostgreSQL storage of chronological promises, countdowns, and completion velocity. 
+| **Best Use of ElevenLabs** | Expressive Morning Voice Debrief & automated voice reminder alerts. 
 
 ---
 
