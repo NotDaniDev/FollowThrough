@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Follow Through — Commitment Intelligence</title>
+  <meta name="description" content="A calm command center for commitments, owners, and deadlines.">
+
+  <!-- Google Fonts: DM Sans, Space Grotesk, JetBrains Mono (from Lovable design system) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+
+  <!-- Lovable Theme Stylesheet -->
+  <link rel="stylesheet" href="/static/lovable-styles.css">
+
+  <style>
+    /* Custom utility helpers to guarantee seamless styling across all browsers */
+    :root {
+      --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-display: "Space Grotesk", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+    }
+    .font-display {
+      font-family: var(--font-display);
+    }
+    .font-mono {
+      font-family: var(--font-mono);
+    }
+    /* Modal backdrop & animations */
+    .modal-overlay {
+      background-color: rgba(5, 10, 8, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    /* Tab active indicator */
+    .tab-active {
+      border-bottom: 2px solid var(--primary) !important;
+      color: var(--foreground) !important;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: oklch(29% 0.012 165 / 0.5);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
+
+  <div class="min-h-screen bg-background text-foreground">
+
+    <!-- Fixed Left Sidebar (Lovable format) -->
+    <aside class="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-sidebar lg:flex">
+      <!-- App Brand / Logo -->
+      <div class="flex h-16 items-center gap-3 px-5 border-b border-border/60">
+        <div class="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </div>
+        <span class="font-display text-[15px] font-semibold tracking-tight text-foreground">Follow Through</span>
+      </div>
+
+      <!-- Navigation Views -->
+      <nav class="space-y-1 px-3 pt-5" aria-label="Dashboard views">
+        <button id="sidebar-btn-commitments" class="inline-flex items-center gap-2.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors h-9 py-2 w-full justify-start px-3 bg-secondary text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard text-primary">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button id="sidebar-btn-orphans" class="inline-flex items-center gap-2.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors h-9 py-2 w-full justify-start px-3 text-muted-foreground hover:bg-accent hover:text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-inbox text-warning">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+            <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
+          <span>Needs owner</span>
+          <span id="sidebar-orphans-badge" class="ml-auto rounded bg-warning/10 border border-warning/20 px-1.5 py-0.5 text-[10px] font-mono text-warning">0</span>
+        </button>
+
+        <button id="sidebar-btn-upload" class="inline-flex items-center gap-2.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors h-9 py-2 w-full justify-start px-3 text-muted-foreground hover:bg-accent hover:text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text">
+            <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path>
+            <path d="M14 2v5a1 1 0 0 0 1 1h5"></path>
+            <path d="M10 9H8"></path>
+            <path d="M16 13H8"></path>
+            <path d="M16 17H8"></path>
+          </svg>
+          <span>Transcripts</span>
+        </button>
+      </nav>
+
+      <!-- Workspace Profile Footer (ADP Enterprise) -->
+      <div class="mt-auto p-4 border-t border-border">
+        <p class="px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Workspace</p>
+        <div class="mt-2.5 flex items-center gap-3 px-2 py-1.5 rounded-lg bg-secondary/35 border border-border/40">
+          <div class="grid size-8 place-items-center rounded-full bg-primary/20 text-xs font-semibold text-primary">RB</div>
+          <div class="min-w-0">
+            <p class="truncate text-xs font-medium text-foreground">Rathiin Bharti</p>
+            <p class="truncate text-[10px] text-muted-foreground">ADP Enterprise</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <main class="lg:pl-60">
+
+      <!-- Top Sticky Command Center Header -->
+      <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/85 px-4 backdrop-blur-xl sm:px-7">
+        <div class="flex items-center gap-3">
+          <button id="btn-mobile-menu" class="inline-flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden" aria-label="Open menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu">
+              <path d="M4 5h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 19h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h1 class="font-display text-base sm:text-lg font-semibold tracking-tight text-foreground">Command center</h1>
+            <p id="header-live-date" class="hidden text-xs text-muted-foreground sm:block">Sunday, October 4 · Live workspace</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Morning Standup Voice Briefing Button -->
+          <button id="btn-voice-briefing" class="inline-flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-accent hover:text-foreground h-9 w-9 border border-border/60 text-muted-foreground" aria-label="Start morning standup" title="Morning standup briefing">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic-vocal">
+              <path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"></path>
+              <path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"></path>
+              <circle cx="16" cy="7" r="5"></circle>
+            </svg>
+          </button>
+
+          <!-- iMessage Agent Drawer Button -->
+          <button id="btn-open-imessage" class="inline-flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-accent hover:text-foreground h-9 w-9 border border-border/60 text-muted-foreground" aria-label="Open iMessage agent" title="iMessage Live Sync">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle">
+              <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path>
+            </svg>
+          </button>
+
+          <!-- New Commitment Button -->
+          <button id="btn-open-custom-reminder" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs sm:text-sm font-semibold cursor-pointer transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-3.5 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
+              <path d="M5 12h14"></path>
+              <path d="M12 5v14"></path>
+            </svg>
+            <span class="hidden sm:inline">New commitment</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Container -->
+      <div class="mx-auto max-w-6xl space-y-7 px-4 py-7 sm:px-7 sm:py-9">
+
+        <!-- EXECUTIVE ACTION DECK: Morning Audio Standup & Set Reminder / Promise -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Card 1: 🎙️ Morning Standup Audio Briefing (ElevenLabs Neural Voice) -->
+          <div class="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-primary/50 transition">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                  </span>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-primary">Daily Audio Briefing</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary">ElevenLabs Creator AI</span>
+              </div>
+
+              <div>
+                <h3 class="font-display text-base font-semibold text-foreground flex items-center gap-2">
+                  <span>🎙️ Morning Executive Standup</span>
+                </h3>
+                <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Listen to an AI-synthesized audio debrief of all active team promises, today's deadlines, and critical orphan risks.
+                </p>
+              </div>
+            </div>
+
+            <!-- Audio Player Controls -->
+            <div class="mt-4 pt-3 border-t border-primary/15 flex flex-wrap items-center gap-2">
+              <button id="btn-play-standup" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-semibold cursor-pointer transition-all bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 h-9 px-4 py-2">
+                <svg id="icon-play-standup" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play">
+                  <polygon points="6 3 20 12 6 21 6 3"></polygon>
+                </svg>
+                <span id="label-play-standup">Play Morning Briefing</span>
+              </button>
+
+              <button id="btn-toggle-script" type="button" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-medium cursor-pointer transition-colors border border-border/80 bg-secondary/50 hover:bg-accent h-9 px-3 text-muted-foreground hover:text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text">
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                  <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                </svg>
+                <span id="label-toggle-script">Read Script</span>
+              </button>
+            </div>
+
+            <!-- Expandable Transcript -->
+            <div id="audio-script-container" class="hidden mt-3 pt-3 border-t border-primary/15 text-xs text-muted-foreground font-mono leading-relaxed max-h-40 overflow-y-auto bg-background/50 p-2.5 rounded-md border border-border/40 whitespace-pre-line">
+              <p id="audio-script-preview">Synthesizing audio standup script...</p>
+            </div>
+            <audio id="audio-element" class="hidden"></audio>
+          </div>
+
+          <!-- Card 2: ⏰ Set Custom Reminder & Promise (Photon Spectrum Proactive Alerts) -->
+          <div class="rounded-xl border border-border bg-panel p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-primary/40 transition">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="size-2 rounded-full bg-emerald-400"></span>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Proactive Tracking</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground">Photon iMessage Engine</span>
+              </div>
+
+              <div>
+                <h3 class="font-display text-base font-semibold text-foreground flex items-center gap-2">
+                  <span>⏰ Set Reminder / Promise</span>
+                </h3>
+                <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Log a commitment promised to a client or team member. Follow Through proactively texts nudges to your iPhone before deadlines expire.
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-4 pt-3 border-t border-border/80 flex flex-wrap items-center gap-2">
+              <button id="btn-hero-set-reminder" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-semibold cursor-pointer transition-all bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm h-9 px-4 py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <span>Set Reminder & Track 🚀</span>
+              </button>
+
+              <a id="btn-hero-open-messages" href="sms:+14152179994&body=START" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-medium cursor-pointer transition-colors border border-border/80 bg-secondary/50 hover:bg-accent h-9 px-3 text-muted-foreground hover:text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle">
+                  <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path>
+                </svg>
+                <span>Text START to Bot</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- iMessage Carrier Live Status Banner -->
+        <div id="imessage-banner" class="rounded-lg border border-primary/25 bg-primary/5 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="flex items-start sm:items-center gap-2.5">
+            <span class="text-base leading-none">💬</span>
+            <div>
+              <span class="text-foreground font-semibold">Photon iMessage Assigned Line:</span>
+              <strong id="banner-assigned-phone" class="font-mono text-primary font-bold ml-1">+1 (415) 217-9994</strong>
+              <span class="text-muted-foreground block sm:inline sm:ml-2">
+                (Linked: <span id="banner-linked-phone" class="font-mono text-foreground">+18622370408</span>)
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-muted-foreground">Carrier tip: Send <strong>START</strong> to unlock texts</span>
+            <a id="banner-messages-link" href="sms:+14152179994&body=START" class="px-2.5 py-1 rounded bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition shadow-xs flex items-center gap-1">
+              <span>Open Messages</span> ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero & Inline Phone Linking Section -->
+        <section class="flex flex-col gap-5 border-b border-border pb-7 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="text-sm font-medium text-primary">Your team is moving</p>
+            <h2 class="mt-1 font-display text-3xl font-semibold sm:text-4xl text-foreground">Keep every promise visible.</h2>
+            <p class="mt-2 max-w-xl text-sm text-muted-foreground">Review what is due, resolve ownership gaps, and turn meeting notes into action.</p>
+          </div>
+
+          <!-- Phone Linking Form -->
+          <form id="phone-link-form" class="flex flex-col sm:flex-row w-full max-w-md gap-2 md:w-auto" onsubmit="event.preventDefault();">
+            <div class="relative min-w-0 flex-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground">
+                <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path>
+              </svg>
+              <input id="input-user-phone" type="tel" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary pl-9 font-mono text-foreground placeholder:text-muted-foreground" aria-label="Phone number" placeholder="+1 (862) 237-0408" value="+18622370408">
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-save-phone" type="button" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors border border-input bg-secondary hover:bg-accent hover:text-accent-foreground h-9 px-3.5 py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-2">
+                  <path d="M9 17H7A5 5 0 0 1 7 7h2"></path>
+                  <path d="M15 7h2a5 5 0 1 1 0 10h-2"></path>
+                  <line x1="8" x2="16" y1="12" y2="12"></line>
+                </svg>
+                <span>Link</span>
+              </button>
+              <button id="btn-imessage-guide" type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9 border border-input text-muted-foreground" aria-label="Phone setup guide" title="Photon Spectrum Setup Guide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- 4-Card KPI Metrics Grid (Lovable format) -->
+        <section class="grid overflow-hidden rounded-lg border border-border bg-panel md:grid-cols-4 shadow-sm">
+          <!-- Active Card -->
+          <div class="p-5 md:p-6 border-b border-border md:border-b-0 md:border-r">
+            <div class="flex items-center justify-between text-muted-foreground">
+              <span class="text-xs font-medium uppercase tracking-wider">Active</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks">
+                <path d="M13 5h8"></path>
+                <path d="M13 12h8"></path>
+                <path d="M13 19h8"></path>
+                <path d="m3 17 2 2 4-4"></path>
+                <path d="m3 7 2 2 4-4"></path>
+              </svg>
+            </div>
+            <p id="stat-pending" class="mt-4 font-display text-3xl font-semibold text-foreground">0</p>
+          </div>
+
+          <!-- Needs Owner Card -->
+          <div class="p-5 md:p-6 border-b border-border md:border-b-0 md:border-r">
+            <div class="flex items-center justify-between text-muted-foreground">
+              <span class="text-xs font-medium uppercase tracking-wider">Needs owner</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check text-warning">
+                <path d="M2 21a8 8 0 0 1 13.292-6"></path>
+                <circle cx="10" cy="8" r="5"></circle>
+                <path d="m16 19 2 2 4-4"></path>
+              </svg>
+            </div>
+            <p id="stat-orphans" class="mt-4 font-display text-3xl font-semibold text-warning">0</p>
+          </div>
+
+          <!-- Overdue Card -->
+          <div class="p-5 md:p-6 border-b border-border md:border-b-0 md:border-r">
+            <div class="flex items-center justify-between text-muted-foreground">
+              <span class="text-xs font-medium uppercase tracking-wider">Overdue</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-3 text-danger">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6h4"></path>
+              </svg>
+            </div>
+            <p id="stat-overdue" class="mt-4 font-display text-3xl font-semibold text-danger">0</p>
+          </div>
+
+          <!-- Reliability Card -->
+          <div class="p-5 md:p-6">
+            <div class="flex items-center justify-between text-muted-foreground">
+              <span class="text-xs font-medium uppercase tracking-wider">Reliability</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-gauge text-primary">
+                <path d="M15.6 2.7a10 10 0 1 0 5.7 5.7"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M13.4 10.6 19 5"></path>
+              </svg>
+            </div>
+            <p id="stat-reliability" class="mt-4 font-display text-3xl font-semibold text-foreground">100%</p>
+          </div>
+        </section>
+
+        <!-- Tabs & Action Bar -->
+        <div class="space-y-4">
+          <div class="flex flex-col gap-3 border-b border-border sm:flex-row sm:items-center sm:justify-between">
+            <div role="tablist" class="inline-flex items-center text-muted-foreground h-auto justify-start gap-6 bg-transparent p-0">
+              <!-- Tab 1: Commitments -->
+              <button id="tab-btn-commitments" type="button" class="tab-active inline-flex items-center justify-center whitespace-nowrap py-1 text-sm font-medium cursor-pointer transition-all border-b-2 px-0 pb-3 text-foreground shadow-none">
+                Commitments
+              </button>
+
+              <!-- Tab 2: Needs owner -->
+              <button id="tab-btn-orphans" type="button" class="inline-flex items-center justify-center whitespace-nowrap py-1 text-sm font-medium cursor-pointer transition-all border-b-2 border-transparent px-0 pb-3 text-muted-foreground hover:text-foreground">
+                Needs owner <span id="tab-orphans-badge" class="ml-1 rounded bg-warning/10 border border-warning/20 px-1.5 py-0.5 text-[10px] font-mono text-warning">0</span>
+              </button>
+
+              <!-- Tab 3: Transcript -->
+              <button id="tab-btn-upload" type="button" class="inline-flex items-center justify-center whitespace-nowrap py-1 text-sm font-medium cursor-pointer transition-all border-b-2 border-transparent px-0 pb-3 text-muted-foreground hover:text-foreground">
+                Transcript
+              </button>
+            </div>
+
+            <!-- Reload Demo Button -->
+            <button id="btn-reset-demo" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs mb-2 self-end text-muted-foreground border border-border/60">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              <span>Reload demo</span>
+            </button>
+          </div>
+
+          <!-- TAB VIEW 1: Commitments Table (Lovable format) -->
+          <div id="tab-view-commitments" class="mt-4">
+            <div class="overflow-hidden rounded-lg border border-border bg-panel shadow-sm">
+              <div class="hidden grid-cols-[1fr_160px_130px] border-b border-border px-5 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground md:grid">
+                <span>Commitment</span>
+                <span>Due</span>
+                <span class="text-right">Action</span>
+              </div>
+              <div id="commitments-list" class="divide-y divide-border">
+                <!-- Dynamically populated rows from API -->
+                <div class="p-12 text-center text-sm text-muted-foreground">Loading commitments...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB VIEW 2: Needs Owner / Orphan Tasks Table (Lovable format) -->
+          <div id="tab-view-orphans" class="mt-4 hidden">
+            <div class="overflow-hidden rounded-lg border border-border bg-panel shadow-sm">
+              <div class="hidden grid-cols-[1fr_160px_130px] border-b border-border px-5 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground md:grid">
+                <span>Orphan Task (Unassigned Risk)</span>
+                <span>Due</span>
+                <span class="text-right">Action</span>
+              </div>
+              <div id="orphans-list" class="divide-y divide-border">
+                <!-- Dynamically populated orphan rows -->
+                <div class="p-12 text-center text-sm text-muted-foreground">No unassigned orphan tasks detected.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB VIEW 3: Transcript Extractor (Lovable 2-Column layout) -->
+          <div id="tab-view-upload" class="mt-4 hidden">
+            <section class="grid overflow-hidden rounded-lg border border-border bg-panel lg:grid-cols-[300px_1fr] shadow-sm">
+              <!-- Left Column: Controls & Upload -->
+              <div class="border-b border-border p-6 lg:border-b-0 lg:border-r">
+                <div class="grid size-10 place-items-center rounded-md bg-primary/10 text-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles">
+                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="mt-5 font-display text-lg font-semibold text-foreground">Extract commitments</h3>
+                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Paste a meeting transcript or load a text file. Gemini AI identifies promises and unassigned orphan tasks.</p>
+
+                <div class="mt-6 space-y-2">
+                  <label class="text-xs font-medium text-muted-foreground" for="input-meeting-title">Meeting title</label>
+                  <input id="input-meeting-title" type="text" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm outline-none focus:border-primary text-foreground" value="Q4 Sprint Planning">
+                </div>
+
+                <div class="mt-3 grid gap-2">
+                  <label class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors border border-input bg-secondary/40 hover:bg-accent h-9 px-4 py-2 text-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" x2="12" y1="3" y2="15"></line>
+                    </svg>
+                    <span>Upload file</span>
+                    <input id="input-transcript-file" type="file" accept=".txt,.vtt,text/plain,text/vtt" class="hidden">
+                  </label>
+
+                  <button id="btn-load-sample" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-accent hover:text-foreground h-9 px-4 py-2 text-muted-foreground border border-border/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text">
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                      <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                    </svg>
+                    <span>Load sample</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right Column: Textarea & Extract Action -->
+              <div class="flex min-h-96 flex-col p-6">
+                <textarea id="input-transcript-text" class="w-full min-h-72 flex-1 resize-none font-mono text-xs leading-relaxed rounded-md border border-input bg-secondary/20 p-4 text-foreground outline-none focus:border-primary placeholder:text-muted-foreground" placeholder="Paste your meeting transcript here..."></textarea>
+
+                <div class="mt-4 flex items-center justify-between">
+                  <span id="transcript-word-count" class="font-mono text-xs text-muted-foreground">0 words</span>
+
+                  <button id="btn-submit-transcript" type="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold cursor-pointer transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles">
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                    </svg>
+                    <span>Extract commitments</span>
+                  </button>
+                </div>
+
+                <!-- Extraction Results Notification -->
+                <div id="transcript-results-card" class="hidden mt-4 p-4 rounded-lg bg-secondary/40 border border-border text-xs text-muted-foreground"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL 1: New Commitment Modal (Lovable Ps dialog format) -->
+  <div id="reminder-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="w-full max-w-md rounded-lg border border-border bg-popover p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <div>
+          <h3 class="font-display text-base font-semibold text-foreground">New commitment</h3>
+          <p class="text-xs text-muted-foreground mt-0.5">Capture the promise, owner, and timeframe.</p>
+        </div>
+        <button id="btn-close-reminder-modal" class="text-muted-foreground hover:text-foreground text-sm font-semibold">✕</button>
+      </div>
+
+      <form id="custom-reminder-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1">What will you do?</label>
+          <input id="reminder-title" type="text" required placeholder="e.g. Review payroll API migration PR" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm text-foreground outline-none focus:border-primary">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1">When?</label>
+            <input id="reminder-timeframe" type="text" required placeholder="e.g. in 2 hours, tomorrow" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm text-foreground outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1">Who is it for?</label>
+            <input id="reminder-recipient" type="text" placeholder="e.g. Aisha Khan" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm text-foreground outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div class="flex items-start gap-2.5 p-3 rounded-md bg-secondary/35 border border-border text-xs text-muted-foreground">
+          <input id="reminder-notify-phone" type="checkbox" checked class="mt-0.5 rounded border-input text-primary focus:ring-0">
+          <label for="reminder-notify-phone" class="cursor-pointer leading-relaxed">
+            📱 Send confirmation and scheduled proactive nudges via <strong>Photon iMessage</strong>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button id="btn-cancel-reminder" type="button" class="px-3.5 py-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground border border-input">Cancel</button>
+          <button id="btn-save-reminder" type="submit" class="px-4 py-2 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition">Create commitment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Phone Setup Guide Modal (Lovable Fs dialog format) -->
+  <div id="photon-guide-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="w-full max-w-md rounded-lg border border-border bg-popover p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <div>
+          <h3 class="font-display text-base font-semibold text-foreground">Phone setup</h3>
+          <p class="text-xs text-muted-foreground mt-0.5">Connect your number for two-way nudges via Photon Spectrum.</p>
+        </div>
+        <button id="btn-close-guide-modal" class="text-muted-foreground hover:text-foreground text-sm font-semibold">✕</button>
+      </div>
+
+      <ol class="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-muted-foreground">
+        <li>Enter your mobile number and select <strong>Link</strong>.</li>
+        <li>Open iMessage and send <span class="font-mono text-foreground font-semibold">START</span> to <span id="guide-assigned-phone" class="font-mono text-primary font-semibold">+1 (628) 289-4567</span>.</li>
+        <li>Reply <span class="font-mono text-foreground font-semibold">DONE</span> or <span class="font-mono text-foreground font-semibold">STATUS</span> when a nudge arrives.</li>
+      </ol>
+
+      <div class="p-3 rounded-md bg-secondary/35 border border-border text-xs text-muted-foreground">
+        💡 <em>Once verified, live iMessage reminders will arrive directly on your iPhone.</em>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-border">
+        <a id="btn-guide-open-imessage" href="sms:+16282894567&body=START" class="text-xs text-primary underline font-medium">Open in Messages</a>
+        <button id="btn-guide-ok" type="button" class="px-4 py-2 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Claim Orphan Task Modal (With Photon iMessage Notification) -->
+  <div id="claim-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="w-full max-w-md rounded-lg border border-border bg-popover p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <div>
+          <h3 class="font-display text-base font-semibold text-foreground">Claim Orphan Task</h3>
+          <p class="text-xs text-muted-foreground mt-0.5">Take ownership of this unassigned commitment.</p>
+        </div>
+        <button id="btn-close-claim-modal" class="text-muted-foreground hover:text-foreground text-sm font-semibold">✕</button>
+      </div>
+
+      <form id="claim-form" class="space-y-4">
+        <input type="hidden" id="claim-task-id" value="">
+
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1">Task Details</label>
+          <div class="p-3 rounded-md bg-secondary/40 border border-border space-y-1">
+            <h4 id="claim-task-title" class="text-sm font-semibold text-warning">Task Title</h4>
+            <div class="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/50 font-mono">
+              <span id="claim-task-deadline" class="text-foreground">Due: Pending</span>
+              <span id="claim-task-meeting">Meeting</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1">Your Name / Committer Identity</label>
+          <input id="claim-user-name" type="text" required placeholder="e.g. Alex Rivera" class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm text-foreground outline-none focus:border-primary">
+        </div>
+
+        <div class="flex items-start gap-2.5 p-3 rounded-md bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
+          <input id="claim-notify-phone" type="checkbox" checked class="mt-0.5 rounded border-input text-warning focus:ring-0">
+          <label for="claim-notify-phone" class="cursor-pointer leading-relaxed">
+            📱 Immediately send confirmation & proactive nudges to my phone (<span id="claim-user-phone-display" class="font-mono text-foreground font-semibold">Linked Phone</span>) via <strong>Photon iMessage</strong>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+          <button id="btn-cancel-claim" type="button" class="px-3.5 py-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground border border-input">Cancel</button>
+          <button id="btn-submit-claim" type="submit" class="px-4 py-2 rounded-md text-xs font-semibold bg-warning text-black hover:bg-warning/90 transition">Claim & Take Ownership 🙋</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: iMessage Agent Live Chat Drawer (Lovable Ls format) -->
+  <div id="imessage-modal" class="fixed inset-0 z-50 flex items-center justify-end p-0 modal-overlay hidden">
+    <div class="h-full w-full max-w-md bg-popover border-l border-border flex flex-col shadow-2xl">
+      <!-- Chat Header -->
+      <div class="flex items-center justify-between border-b border-border p-4 bg-sidebar">
+        <div class="flex items-center gap-2.5">
+          <div class="grid size-8 place-items-center rounded-full bg-primary/20 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle">
+              <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-display text-sm font-semibold text-foreground">iMessage Live Agent</h3>
+            <p class="text-[11px] text-muted-foreground font-mono">Photon Spectrum · Two-Way Sync</p>
+          </div>
+        </div>
+        <button id="btn-close-imessage" class="text-muted-foreground hover:text-foreground text-sm font-semibold p-1">✕</button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="imessage-messages" class="flex-1 space-y-3 overflow-y-auto p-4 flex flex-col">
+        <!-- System greeting bubble -->
+        <div class="flex justify-start">
+          <div class="max-w-[85%] whitespace-pre-line rounded-lg px-3.5 py-2.5 text-xs bg-secondary/80 border border-border/40 text-foreground leading-relaxed">
+            🌿 <strong>Follow Through AI Connected!</strong><br>
+            • Text promises to auto-track: <em>"Told Bob I will send the quote tomorrow by 2pm"</em><br>
+            • Text <strong>STATUS</strong> to list your commitments<br>
+            • Text <strong>DONE</strong> to mark tasks completed
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Form -->
+      <form id="imessage-form" class="flex gap-2 border-t border-border p-3 bg-sidebar">
+        <input id="imessage-input" type="text" placeholder="Type a message or promise..." class="w-full rounded-md border border-input bg-secondary/35 px-3 py-2 text-sm text-foreground outline-none focus:border-primary placeholder:text-muted-foreground">
+        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-9 w-9 shrink-0" aria-label="Send message">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
