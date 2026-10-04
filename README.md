@@ -1,4 +1,4 @@
-# 🎯 Follow Through
+# Follow Through
 ### *The Autonomous Enterprise Commitment & Orphan Task Intelligence Engine*
 **Built for GirlHacks 2026 | ADP Challenge: "AI for the Modern Enterprise"**
 
