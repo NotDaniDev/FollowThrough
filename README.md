@@ -28,7 +28,7 @@ Follow Through turns messy enterprise conversations into automated accountabilit
 
 ## 🏆 Hackathon Sponsor Prize Alignment
 
-| Challenge / Sponsor | Implementation in Follow Through | Prize Target |
+| Challenge / Sponsor | Implementation in Follow Through
 | :--- | :--- | :--- |
 | **ADP: AI for the Modern Enterprise** | Directly solves context fragmentation by unifying texts, calls, and transcripts into an actionable commitment timeline. 
 | **Best Use of Gemini API** | High-context semantic parsing, timeframe normalization, and passive-voice orphan task classification.
