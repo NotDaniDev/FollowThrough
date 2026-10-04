@@ -1,0 +1,54 @@
+/* PledgeFlow AI Custom Styling */
+
+.tab-btn.active {
+  background-color: rgb(30 41 59 / 0.8);
+  color: rgb(248 250 252);
+  border: 1px solid rgb(51 65 85);
+}
+
+.countdown-normal {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.countdown-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.countdown-overdue {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(244, 63, 94, 0);
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

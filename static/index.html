@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Follow Through — Autonomous Enterprise Commitment & Accountability Engine</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            },
+            adp: {
+              red: '#d0271d',
+              dark: '#0f172a'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-xl font-bold">
+          🎯
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">Follow Through</h1>
+            <span class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">ADP Modern Enterprise</span>
+          </div>
+          <p class="text-xs text-slate-400">Autonomous Commitment & Orphan Task Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3">
+        <button id="btn-open-custom-reminder" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition shadow-sm shadow-emerald-600/30">
+          <span>➕ Set Reminder</span>
+        </button>
+
+        <button id="btn-voice-briefing" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition shadow-sm hover:border-slate-600">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="voice-briefing-label">🎙️ Morning Audio Standup</span>
+        </button>
+
+        <button id="btn-open-imessage" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition shadow-sm shadow-blue-600/30">
+          <span>💬 iMessage Agent</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Phone Connection Banner (Photon iMessage Control Center) -->
+  <div class="bg-slate-900/95 border-b border-slate-800 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-base font-bold shrink-0">
+          📱
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-100 text-sm">Photon iMessage Real-Time Sync</span>
+            <span id="phone-status-pill" class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono font-medium">Not Linked</span>
+          </div>
+          <p class="text-slate-400 text-[11px] mt-0.5">Receive autonomous deadline nudges & text commitments directly to your iPhone via Photon Spectrum</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <!-- Input section -->
+        <div class="flex items-center gap-2">
+          <input id="input-user-phone" type="tel" placeholder="+1 (732) 000-0000" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 w-44 font-mono">
+          <button id="btn-save-phone" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition text-xs flex items-center gap-1 shadow-sm shadow-blue-600/30">
+            <span>Link Phone</span>
+          </button>
+        </div>
+
+        <!-- Connected Actions (Revealed when linked) -->
+        <div id="phone-active-actions" class="hidden flex items-center gap-2 flex-wrap">
+          <a id="btn-open-imessage-link" href="#" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/30">
+            <span>💬 Open iMessage</span>
+          </a>
+          <button id="btn-test-phone-nudge" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition text-xs flex items-center gap-1">
+            <span>⚡ Test Nudge</span>
+          </button>
+          <button id="btn-imessage-guide" class="text-slate-400 hover:text-slate-200 text-xs px-2 py-1 rounded bg-slate-800/60 border border-slate-700/60">
+            ℹ️ Setup Guide
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Channel Info Drawer -->
+    <div id="phone-guidance-card" class="hidden mt-3 pt-3 border-t border-slate-800/80 max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-emerald-400 font-semibold">🟢 Channel Active:</span>
+          <span class="text-slate-300">Your Phone <strong id="lbl-linked-phone" class="font-mono text-emerald-300"></strong> ↔️ Bot Line <strong id="lbl-assigned-phone" class="font-mono text-blue-400"></strong></span>
+          <span class="bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.2 rounded text-[10px]">Spectrum Shared Pool</span>
+        </div>
+        <p class="text-[11px] text-slate-400">
+          <strong>To receive texts & send promises:</strong> Tap <a id="link-inline-open" href="#" target="_blank" class="text-emerald-400 font-semibold underline">"Open iMessage"</a> or text <code class="bg-slate-800 px-1.5 py-0.5 rounded text-blue-300 font-mono font-bold">START</code> from your iPhone to <span id="lbl-assigned-phone-inline" class="font-mono text-blue-300 font-bold"></span>. Once opened, Follow Through dispatches live proactive nudges right to your Messages thread!
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Player Banner (Hidden until triggered) -->
+  <div id="audio-banner" class="hidden bg-emerald-950/80 border-b border-emerald-800/50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🔊</span>
+        <div>
+          <p class="text-xs font-semibold text-emerald-300">ElevenLabs Enterprise Briefing</p>
+          <p id="audio-script-preview" class="text-xs text-slate-300 italic max-w-2xl truncate"></p>
+        </div>
+      </div>
+      <audio id="audio-element" controls class="h-8 max-w-xs"></audio>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- KPI / Metric Cards (Tiger Data Analytics) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm">
+        <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+          <span>Active Commitments</span>
+          <span class="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">Real-time</span>
+        </div>
+        <p id="stat-pending" class="text-3xl font-extrabold text-white mt-2 font-mono">0</p>
+        <p class="text-xs text-slate-400 mt-1">Pending promises across calls & texts</p>
+      </div>
+
+      <div class="bg-amber-950/20 border border-amber-600/30 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
+        <div class="absolute -right-4 -bottom-4 text-amber-500/10 text-7xl font-bold">⚠️</div>
+        <div class="flex items-center justify-between text-amber-300 text-xs font-medium">
+          <span>Orphan Tasks (No Assignee)</span>
+          <span class="text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded animate-pulse">Critical Risk</span>
+        </div>
+        <p id="stat-orphans" class="text-3xl font-extrabold text-amber-300 mt-2 font-mono">0</p>
+        <p class="text-xs text-amber-400/80 mt-1">Tasks raised in meetings with no owner</p>
+      </div>
+
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm">
+        <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+          <span>Overdue SLA Breaches</span>
+          <span class="text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">Action Req</span>
+        </div>
+        <p id="stat-overdue" class="text-3xl font-extrabold text-rose-400 mt-2 font-mono">0</p>
+        <p class="text-xs text-slate-400 mt-1">Commitments past agreed deadline</p>
+      </div>
+
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm">
+        <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+          <span>Reliability Score</span>
+          <span class="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">Tiger Data</span>
+        </div>
+        <p id="stat-reliability" class="text-3xl font-extrabold text-indigo-300 mt-2 font-mono">100%</p>
+        <p class="text-xs text-slate-400 mt-1">Promises delivered within deadline</p>
+      </div>
+    </div>
+
+    <!-- Main Content Navigation Tabs -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div class="flex items-center gap-2">
+        <button id="tab-btn-commitments" class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold transition">
+          📋 All Commitments (<span id="count-all">0</span>)
+        </button>
+        <button id="tab-btn-orphans" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-slate-400 hover:text-slate-200">
+          ⚠️ Orphan Tasks (<span id="count-orphans">0</span>)
+        </button>
+        <button id="tab-btn-upload" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-slate-400 hover:text-slate-200">
+          📥 Upload Meeting Transcript
+        </button>
+        <button id="btn-reset-demo" class="ml-2 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 transition flex items-center gap-1 shadow-sm">
+          <span>⚡ Reload Demo Commitments</span>
+        </button>
+      </div>
+
+      <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400">
+        <span>Powered by:</span>
+        <span class="bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono">Gemini 2.5</span>
+        <span class="bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono">Photon</span>
+        <span class="bg-slate-800 px-2 py-1 rounded text-slate-300 font-mono">Tiger Data</span>
+      </div>
+    </div>
+
+    <!-- TAB 1: ALL COMMITMENTS -->
+    <div id="tab-view-commitments" class="space-y-4">
+      <div id="commitments-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: ORPHAN TASKS (ADP DIFFERENTIATOR) -->
+    <div id="tab-view-orphans" class="hidden space-y-4">
+      <div class="bg-amber-950/20 border border-amber-600/30 rounded-xl p-4 text-xs text-amber-200/90 leading-relaxed">
+        <strong>💡 Why Orphan Tasks Matter for the Modern Enterprise:</strong>
+        During meetings, critical deliverables are often proposed passively (e.g. <em>"Someone needs to update the client pitch deck"</em>). Everyone nods, but no one is assigned ownership. Follow Through automatically catches these unclaimed commitments and allows team members to claim them with a single click.
+      </div>
+      <div id="orphans-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: MEETING TRANSCRIPT UPLOADER -->
+    <div id="tab-view-upload" class="hidden">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 max-w-3xl mx-auto space-y-5">
+        <div>
+          <h3 class="text-base font-bold text-white">Upload Meeting Audio or Transcript</h3>
+          <p class="text-xs text-slate-400 mt-1">Upload a Zoom, Teams, or call transcript (.txt, .vtt) or paste text directly. Gemini will extract all explicit commitments and identify high-risk unassigned tasks.</p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Meeting Title</label>
+            <input id="input-meeting-title" type="text" value="Q4 Engineering & Product Sync" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Transcript Content</label>
+            <textarea id="input-transcript-text" rows="8" placeholder="Paste dialogue here (e.g. Alex: I'll send the file by 3pm... Dave: Someone should verify backups...)" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-100 font-mono focus:outline-none focus:border-emerald-500"></textarea>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <button id="btn-load-sample" class="text-xs text-emerald-400 hover:text-emerald-300 underline font-medium">
+              ⚡ Load Sample Q4 Sprint Transcript (With Orphan Tasks)
+            </button>
+            <button id="btn-submit-transcript" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition">
+              ✨ Extract Commitments with Gemini
+            </button>
+          </div>
+        </div>
+
+        <div id="upload-status" class="hidden text-xs p-3 rounded-lg bg-slate-800/80 text-slate-300"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive Photon iMessage Drawer / Modal -->
+  <div id="imessage-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col h-[600px]">
+      <!-- iPhone Header -->
+      <div class="bg-slate-800/90 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            FT
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-white flex items-center gap-1">
+              Follow Through Bot <span class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.2 rounded font-normal">Photon iMessage</span>
+            </h4>
+            <p class="text-[10px] text-slate-400">Spectrum Framework Agent</p>
+          </div>
+        </div>
+        <button id="btn-close-imessage" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="imessage-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950 font-sans text-xs">
+        <div class="flex flex-col items-center my-2 text-[10px] text-slate-500">Today · iMessage</div>
+        <div class="bg-slate-800 text-slate-200 p-3 rounded-2xl rounded-tl-sm max-w-[85%] self-start border border-slate-700/50">
+          👋 Hi Alex! I am your native iMessage accountability agent. Text me promises you make to colleagues or clients (e.g. <em>"Told Dave I'll send the API spec by 5pm"</em>), or reply <strong>DONE</strong> to check off tasks!
+        </div>
+      </div>
+
+      <!-- Message Input -->
+      <form id="imessage-form" class="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+        <input id="imessage-input" type="text" placeholder="Text a promise or 'WHAT ARE MY COMMITMENTS?'" class="flex-1 bg-slate-950 border border-slate-800 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+        <button type="submit" class="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center text-white text-xs font-bold transition">
+          ↑
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Reminder / Promise Creation Modal -->
+  <div id="reminder-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">⏰</span>
+          <h3 class="text-base font-bold text-white">Set Your Own Reminder / Promise</h3>
+        </div>
+        <button id="btn-close-reminder-modal" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+      </div>
+
+      <form id="custom-reminder-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">What did you promise to do?</label>
+          <input id="reminder-title" type="text" required placeholder="e.g. Send updated pricing deck to Sarah" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">When is it due? (Timeframe)</label>
+            <input id="reminder-timeframe" type="text" required placeholder="e.g. in 30 minutes, by 5 PM, tomorrow" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Who was it promised to?</label>
+            <input id="reminder-recipient" type="text" placeholder="e.g. Dave (Client) or Self" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 p-3 rounded-lg bg-blue-950/30 border border-blue-800/40 text-xs text-blue-200">
+          <input id="reminder-notify-phone" type="checkbox" checked class="rounded border-slate-700 text-blue-600 focus:ring-0">
+          <label for="reminder-notify-phone" class="cursor-pointer">
+            📱 Immediately send confirmation & schedule proactive nudge to my phone via <strong>Photon iMessage</strong>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="btn-cancel-reminder" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+            Cancel
+          </button>
+          <button type="submit" id="btn-save-reminder" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition">
+            Set Reminder & Alert Phone 🚀
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Claim Orphan Task Modal -->
+  <div id="claim-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🙋</span>
+          <h3 class="text-base font-bold text-white">Claim Orphan Task</h3>
+        </div>
+        <button id="btn-close-claim-modal" type="button" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+      </div>
+
+      <form id="claim-form" class="space-y-4">
+        <input type="hidden" id="claim-task-id" value="">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Task to Claim</label>
+          <div id="claim-task-preview" class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
+            <h4 id="claim-task-title" class="text-sm font-semibold text-amber-200">Task Title</h4>
+            <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/60 font-mono">
+              <span id="claim-task-deadline" class="text-emerald-400">Due: Pending</span>
+              <span id="claim-task-meeting" class="text-slate-400">Meeting</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Your Name / Committer Identity</label>
+          <input id="claim-user-name" type="text" required placeholder="e.g. Alex Rivera" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200">
+          <input id="claim-notify-phone" type="checkbox" checked class="mt-0.5 rounded border-slate-700 text-amber-500 focus:ring-0">
+          <label for="claim-notify-phone" class="cursor-pointer leading-relaxed">
+            📱 Immediately send confirmation & schedule proactive nudges to my phone (<span id="claim-user-phone-display" class="font-mono text-emerald-300">Checking...</span>) via <strong>Photon iMessage</strong>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="btn-cancel-claim" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+            Cancel
+          </button>
+          <button type="submit" id="btn-submit-claim" class="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white shadow-lg shadow-amber-600/30 transition flex items-center gap-1.5">
+            <span>Claim & Take Ownership 🙋</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Photon iMessage Setup & Security Modal -->
+  <div id="photon-guide-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">💬</span>
+          <h3 class="text-base font-bold text-white">Photon Spectrum iMessage Guide</h3>
+        </div>
+        <button id="btn-close-guide-modal" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+      </div>
+
+      <div class="text-xs text-slate-300 space-y-3">
+        <p>
+          Follow Through is integrated with <strong>Photon Spectrum</strong> (<code class="bg-slate-800 px-1 py-0.5 rounded text-blue-300">spectrum-ts</code>) using Project ID <code class="bg-slate-800 px-1 py-0.5 rounded text-slate-300">683a5e64...</code> on the <strong>Shared iMessage Line</strong> tier.
+        </p>
+
+        <div class="p-3 bg-blue-950/30 border border-blue-800/40 rounded-xl space-y-1.5">
+          <h5 class="font-bold text-blue-300 flex items-center gap-1.5">
+            <span>🛡️ Why does Photon require an initial text?</span>
+          </h5>
+          <p class="text-[11px] text-blue-200/90 leading-relaxed">
+            Per the official Photon documentation, shared pool lines enforce an anti-spam security policy: agents cannot send unsolicited outbound messages to unknown numbers until an authorized conversation space is opened.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <h5 class="font-bold text-white">How to connect your phone in 5 seconds:</h5>
+          <ol class="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
+            <li>Tap <strong class="text-emerald-400">"Open iMessage"</strong> on the banner (or open Messages on your iPhone).</li>
+            <li>Send the word <strong class="text-white font-mono">START</strong> or <strong class="text-white font-mono">HELLO</strong> to <strong id="guide-assigned-phone" class="text-blue-300 font-mono">+1 (628) 289-4567</strong>.</li>
+            <li>Our live gRPC listener receives your message and immediately authorizes bidirectional delivery!</li>
+            <li>You can now receive proactive nudges, deadline warnings, and text new commitments anytime.</li>
+          </ol>
+        </div>
+
+        <div class="p-2.5 bg-slate-800/60 rounded-lg text-[10px] text-slate-400">
+          💡 <strong>Alternative for direct outbound:</strong> Log into <a href="https://app.photon.codes" target="_blank" class="text-blue-400 underline font-semibold">app.photon.codes</a>, go to project <strong>"adp"</strong>, and add your number to the <strong>Outbound Allowlist</strong>.
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-800">
+        <button id="btn-guide-ok" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition">
+          Got It!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
