@@ -58,23 +58,4 @@ python run.py
 ```
 Open **[http://localhost:8000](http://localhost:8000)** in your browser!
 
----
 
-## 🎬 5-Minute Demo Script for Judges
-
-1. **The Hook (1 min)**:
-   - "How often have you told a client *'I'll send that by 3 PM'* and forgotten? Or had a meeting where someone said *'we need to fix this before Friday'* and nobody did it? That's what Follow Through solves."
-2. **The iMessage Demo (1 min)**:
-   - Open the **iMessage Agent** on the dashboard.
-   - Text: `"Told Dave I'll send the updated pricing proposal by 3 PM today"`.
-   - Show the Photon bot reply logging the promise and setting a countdown timer.
-3. **The Meeting Transcript & Orphan Task Detection (1.5 min)**:
-   - Go to **Upload Meeting Transcript**.
-   - Click **"Load Sample Q4 Sprint Transcript"** and hit **Extract with Gemini**.
-   - Show how it extracted assigned promises AND caught the **high-risk unassigned orphan tasks** (*"Audit database backup replication"*).
-   - Click **"Claim 🙋"** to show a team member adopting the task.
-4. **The ElevenLabs Voice Standup (30 sec)**:
-   - Click **"🎙️ Morning Audio Standup"** at the top right.
-   - Listen to the AI voice summarize your daily commitments and highlight orphan tasks.
-5. **Tiger Data Analytics & Wrap-up (1 min)**:
-   - Show the real-time SLA metrics and completion velocity.
